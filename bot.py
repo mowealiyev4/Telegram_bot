@@ -4,7 +4,7 @@ from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, Con
 from openai import OpenAI
 
 # Ətraf mühit dəyişənlərini oxuyur
-BOT_TOKEN = os.getenv("7589791481:AAHsNrQhUsMjPGcqZLpIKm40odworqLHd0I")
+BOT_TOKEN = os.getenv("7589791481:AAFzQb61FPDURo4wYSvhgqKBj7NCN-fvsRQ")
 OPENAI_API_KEY = os.getenv("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")
 
 # OpenAI müştərisi
