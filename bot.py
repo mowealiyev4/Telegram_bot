@@ -4,7 +4,7 @@ from openai import OpenAI
 import traceback
 
 # Ayarlar
-BOT_TOKEN = "7589791481:AAHsNrQhUsMjPGcqZLpIKm40odworqLHd0I"
+
 BOT_USERNAME = "hamster_sohbet_bot"
 BOT_NAME_KEYWORDS = ["hamster", "Hamster", "Hamster bot", "hamster bot"]
 
