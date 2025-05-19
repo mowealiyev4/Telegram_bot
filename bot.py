@@ -19,22 +19,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     try:
-        response = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
-    messages=[
-        {"role": "system", "content": "San bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun."},
-        {"role": "user", "content": text}
-    ],
-    max_tokens=50,
-    temperature=0.8
-)
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "San bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun."},
+            {"role": "user", "content": text}
+        ],
+        max_tokens=50,
+        temperature=0.8
+    )
 
-print(response)  # debug üçün
+    print(response)  # debug üçün
 
-await update.message.reply_text(response["choices"][0]["message"]["content"].strip())
-    except Exception as e:
-        await update.message.reply_text("Xəta baş verdi.")
+    await update.message.reply_text(response["choices"][0]["message"]["content"].strip())
 
+except Exception as e:
+    await update.message.reply_text("Xəta baş verdi.")
+    print(e)  # əlavə olaraq terminala xətanı da göstər
 # Botu işə salır
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("sohbet", start))
