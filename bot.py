@@ -18,6 +18,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
+    # Əgər mesaj boşdursa, cavab vermə
+    if not text:
+        return
+
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -29,15 +33,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             temperature=0.8
         )
 
-        # Debug üçün cavabı loga yaz
-        print(response)
+        print(response)  # Debug üçün logda göstər
 
-        # Cavabı çatda göstər
-        await update.message.reply_text(response["choices"][0]["message"]["content"].strip())
+        # Cavabı çıxart (istənilən OpenAI cavab strukturunu dəstəkləyir)
+        reply = ""
+        if "choices" in response:
+            if "message" in response["choices"][0]:
+                reply = response["choices"][0]["message"]["content"]
+            elif "text" in response["choices"][0]:
+                reply = response["choices"][0]["text"]
+            else:
+                reply = "Cavab formatı anlaşılamadı."
+        else:
+            reply = "OpenAI cavabı boşdur."
+
+        await update.message.reply_text(reply.strip())
 
     except Exception as e:
         await update.message.reply_text("Xəta baş verdi.")
-        print(e)
+        print("Xəta:", e)
 
 # Botu işə salır
 app = ApplicationBuilder().token(BOT_TOKEN).build()
