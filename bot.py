@@ -1,7 +1,7 @@
 import os
 import openai
 from telegram import Update
-from telegram.ext import Application, MessageHandler, CommandHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
