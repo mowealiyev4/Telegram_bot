@@ -47,8 +47,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             reply = response.choices[0].message.content.strip()
             await message.reply_text(reply)
-        except Exception:
-            await message.reply_text("Xəta baş verdi.")
+        except Exception as e:
+            await message.reply_text(f"Xəta: {e}")
             traceback.print_exc()
 
 if __name__ == "__main__":
