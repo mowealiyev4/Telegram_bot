@@ -28,7 +28,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             max_tokens=50,
             temperature=0.8
         )
-        await update.message.reply_text(response.choices[0].message.content.strip())
+        await update.message.reply_text(response.choices[0]["message"]["content"].strip())
 
     except Exception as e:
         await update.message.reply_text("Xəta baş verdi.")
