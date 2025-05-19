@@ -1,60 +1,60 @@
-import os
-import openai
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    MessageHandler,
-    CommandHandler,
-    ContextTypes,
-    filters,
-)
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
+from openai import OpenAI
+import traceback
 
-# Tokenləri oxu
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# AÇARLAR — **tokenləri istədiyin kimi dəyişə bilərsən**
+BOT_TOKEN = "7589791481:AAGyGE8ZISl9x-IdRnloGgClUWTl6uyzBmM"
+BOT_USERNAME = "hamster_sohbet_bot"
+OPENAI_API_KEY = "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"
+BOT_NAME_KEYWORDS = ["hamster", "Hamster", "Hamster bot", "hamster bot"]
 
-openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
-# /sohbet komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Salam! Mən Hamster Botam. Mənə yaz və ya repley at — cavab verim. Amma real və qısa danışıram."
-    )
+        "Salam! Mən Hamster Botam. Adımı tag etsən, ya reply etsən cavab verərəm — amma qısa danışıram, real kimi.")
 
-# Mesaj cavabı
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    user_text = None
+    if not message or not message.text:
+        return
 
-    if message.reply_to_message and message.reply_to_message.from_user.id == context.bot.id:
-        user_text = message.text
-    elif f"@{context.bot.username}" in message.text:
-        user_text = message.text.replace(f"@{context.bot.username}", "").strip()
-    elif message.chat.type == "private":
-        user_text = message.text
+    text = message.text.strip()
+    called_by_tag = f"@{BOT_USERNAME.lower()}" in text.lower()
+    called_by_name = any(name.lower() in text.lower() for name in BOT_NAME_KEYWORDS)
+    called_by_reply = (
+        message.reply_to_message and
+        message.reply_to_message.from_user and
+        message.reply_to_message.from_user.id == context.bot.id
+    )
 
-    if not user_text:
-        return  # Heç bir uyğun mesaj yoxdursa, cavab vermə
+    if called_by_tag or called_by_name or called_by_reply:
+        user_input = text.replace(f"@{BOT_USERNAME}", "").strip()
+        if user_input.lower() in ["sus", "sakit ol", "danışma"]:
+            return
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "San bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun."},
-                {"role": "user", "content": user_text},
-            ],
-            max_tokens=100,
-            temperature=0.8,
-        )
-        await message.reply_text(response["choices"][0]["message"]["content"].strip())
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "Sən dostcasına yazışan bot-san. Cavabın 1 cümlə, real və qısa olsun."},
+                    {"role": "user", "content": user_input}
+                ],
+                max_tokens=50,
+                temperature=0.9,
+                stop=["\n"]
+            )
+            reply = response.choices[0].message.content.strip()
+            await message.reply_text(reply)
+        except Exception as e:
+            await message.reply_text("Xəta baş verdi.")
+            traceback.print_exc()
 
-    except Exception as e:
-        print("OpenAI xətası:", e)
-        await message.reply_text("Xəta baş verdi. Yenidən yoxla.")
-
-# Botu qur
+# BOTU BAŞLAT
 app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(CommandHandler("sohbet", start))
+app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
+print("Bot işləyir... Reply və tag ilə cavab verir.")
 app.run_polling()
