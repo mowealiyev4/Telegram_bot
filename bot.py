@@ -1,19 +1,23 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-from openai import OpenAI
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
+import openai
 import traceback
-import os
 
-BOT_TOKEN = "7589791481:AAFokRD6puqOSJp33Jh5pSJbONXPxIPiIbI"
+# Ayarlar
+BOT_TOKEN = "7589791481:AAGyGE8ZISl9x-IdRnloGgClUWTl6uyzBmM"
 BOT_USERNAME = "hamster_sohbet_bot"
 BOT_NAME_KEYWORDS = ["hamster", "Hamster", "Hamster bot", "hamster bot"]
 OPENAI_API_KEY = "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"
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+openai.api_key = OPENAI_API_KEY
 
+# /start komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Salam! Mən Hamster Botam. Adımı tag etsən, cavab verərəm — amma çox danışmıram, yormuram, özüm kimi danışıram.")
+    await update.message.reply_text(
+        "Salam! Mən Hamster Botam. Mənə yaz və ya reply et, ya da adımı tag etsən cavab verərəm — amma qısa danışaram, real kimi."
+    )
 
+# Cavablandırma
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     if not message or not message.text:
@@ -30,38 +34,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if called_by_tag or called_by_name or called_by_reply:
         user_input = text.replace(f"@{BOT_USERNAME}", "").strip()
-
         if user_input.lower() in ["sus", "sakit ol", "danışma"]:
             return
 
         try:
-            response = client.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "Sən doğma və qısa danışan, real, zarafat edən insana bənzər botsan."},
+                    {"role": "system", "content": "Qısa və doğma danış. Robot kimi yox. 1 cümlə. Zarafat edə bilərsən."},
                     {"role": "user", "content": user_input}
                 ],
                 max_tokens=50,
-                temperature=0.9,
-                stop=["\n"]
+                temperature=0.9
             )
-            reply = response.choices[0].message.content.strip()
+            reply = response['choices'][0]['message']['content'].strip()
             await message.reply_text(reply)
-        except Exception as e:
-            await message.reply_text(f"Xəta: {e}")
+        except Exception:
+            await message.reply_text("Xəta baş verdi.")
             traceback.print_exc()
 
-if __name__ == "__main__":
-    PORT = int(os.environ.get("PORT", "8080"))
-    RENDER_APP_NAME = "missohbet-botu"
+# Botu işə sal
+app = ApplicationBuilder().token(BOT_TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=BOT_TOKEN,
-        webhook_url=f"https://{RENDER_APP_NAME}.onrender.com/{BOT_TOKEN}"
-    )
+print("Bot işə düşdü...")
+app.run_polling()
