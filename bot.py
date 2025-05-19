@@ -7,11 +7,24 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
 
+# /start komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Salam! Mən Hamster Botam. Mənə yaz, cavab verim – amma real və qısa danışıram.")
+    await update.message.reply_text("Salam! Mən Hamster Botam. Adımı tag etsən, cavab verərəm — amma çox danışmıram, yormuram, özüm kimi danışıram.")
 
+# Mesajlara cavab
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
+    message = update.message
+
+    if not message:
+        return
+
+    # İstifadəçinin mesajı reply və ya taglı olub olmadığını yoxla
+    if message.chat.type in ['group', 'supergroup']:
+        if not (message.text and (message.text.startswith("@") or message.reply_to_message)):
+            return
+
+    text = message.text or message.caption or ""
+
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -22,12 +35,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             max_tokens=50,
             temperature=0.8
         )
-        await update.message.reply_text(response["choices"][0]["message"]["content"].strip())
+
+        await message.reply_text(response["choices"][0]["message"]["content"].strip())
+
     except Exception as e:
-        print(f"Həqiqi xəta: {e}")
-        await update.message.reply_text("Xəta baş verdi. Yenidən yoxla.")
+        await message.reply_text("Xəta baş verdi. Yenidən yoxla.")
+        print(e)
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("sohbet", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
 app.run_polling()
