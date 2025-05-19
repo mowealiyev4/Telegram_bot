@@ -1,33 +1,32 @@
 import os
 import openai
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+BOT_TOKEN = os.getenv("BOT_TOKEN").strip()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY").strip()
 openai.api_key = OPENAI_API_KEY
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Salam! Mən Hamster Botam. Adımı tag etsən, cavab verərəm — amma çox danışmıram, yormuram, özüm kimi danışıram."
-    )
+    await update.message.reply_text("Salam! Mən Hamster Botam. Mənə yaz, cavab verim – amma real və qısa danışıram.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_message = update.message.text
     try:
-        text = update.message.text
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "San bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun."},
-                {"role": "user", "content": text}
+                {"role": "system", "content": "Sən doğma, real və qısa danışan Telegram botusan."},
+                {"role": "user", "content": user_message}
             ],
-            max_tokens=50,
-            temperature=0.8
+            max_tokens=100,
+            temperature=0.7,
         )
-        await update.message.reply_text(response.choices[0].message.content.strip())
+        reply = response["choices"][0]["message"]["content"].strip()
+        await update.message.reply_text(reply)
     except Exception as e:
-        await update.message.reply_text("Xəta baş verdi.")
-        print(e)
+        print("Xəta:", e)
+        await update.message.reply_text("Xəta baş verdi. Yenidən yoxla.")
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("sohbet", start))
