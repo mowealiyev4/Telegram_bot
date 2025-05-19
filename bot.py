@@ -1,14 +1,14 @@
 import os
+import openai
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
-from openai import OpenAI
+from telegram.ext import Application, MessageHandler, CommandHandler, ContextTypes, filters
 
-# Ətraf mühit dəyişənlərini oxuyur
+
 BOT_TOKEN = os.getenv("7589791481:AAGKIsetT8xS66wp0zsshV_o_Gb_KhE-PzU")
 OPENAI_API_KEY = os.getenv("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")
+openai.api_key = OPENAI_API_KEY
 
-# OpenAI müştərisi
-client = OpenAI(api_key=OPENAI_API_KEY)
+
 
 # /start komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -19,7 +19,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     try:
-        response = client.chat.completions.create(
+        response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Sən bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun. Zarafat edə bilərsən. Dost kimi cavab ver."},
