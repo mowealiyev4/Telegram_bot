@@ -6,7 +6,7 @@ import traceback
 # AÇARLAR — **tokenləri istədiyin kimi dəyişə bilərsən**
 BOT_TOKEN = "7589791481:AAFFdKbZKEJeS079ID0mnQk1d3yIdlckYDY"
 BOT_USERNAME = "hamster_sohbet_bot"
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 BOT_NAME_KEYWORDS = ["hamster", "Hamster", "Hamster bot", "hamster bot"]
 
 client = OpenAI(api_key=OPENAI_API_KEY)
