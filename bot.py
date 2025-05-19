@@ -19,17 +19,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     try:
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Sən bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun. Zarafat edə bilərsən. Dost kimi cavab ver."},
-                {"role": "user", "content": text}
-            ],
-            max_tokens=50,
-            temperature=0.8
-        )
-        await update.message.reply_text(response.choices[0]["message"]["content"].strip())
+        response = openai.ChatCompletion.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "San bir insan kimi yazışan chatbot-san. Cavabların doğma, real və qısa olsun."},
+        {"role": "user", "content": text}
+    ],
+    max_tokens=50,
+    temperature=0.8
+)
 
+print(response)  # debug üçün
+
+await update.message.reply_text(response["choices"][0]["message"]["content"].strip())
     except Exception as e:
         await update.message.reply_text("Xəta baş verdi.")
 
