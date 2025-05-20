@@ -1,62 +1,65 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
-import openai
+from openai import OpenAI
 import traceback
 
 # Ayarlar
-BOT_TOKEN = "7589791481:AAH2eUoPFx9_GEpnjf8pXXUA9WR8SEJbO3I"
+BOT_TOKEN = "7589791481:AAETJbD0kxP48tPDg18-bDZ6c4ARNT7mJZg"
 BOT_USERNAME = "hamster_sohbet_bot"
-BOT_NAME_KEYWORDS = ["hamster", "Hamster", "Hamster bot", "hamster bot"]
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 
-openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # /start komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Salam! Mən Hamster Botam. Mənə yaz və ya reply et, ya da adımı tag etsən cavab verərəm — amma qısa danışaram, real kimi."
-    )
+    await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, qısa və ağıllı danışım — əsl dost kimi.")
 
-# Cavablandırma
+# Cavablandırma funksiyası
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     if not message or not message.text:
         return
 
-    text = message.text.strip()
-    called_by_tag = f"@{BOT_USERNAME.lower()}" in text.lower()
-    called_by_name = any(name.lower() in text.lower() for name in BOT_NAME_KEYWORDS)
-    called_by_reply = (
+    is_reply = (
         message.reply_to_message and
         message.reply_to_message.from_user and
         message.reply_to_message.from_user.id == context.bot.id
     )
+    is_tagged = f"@{BOT_USERNAME.lower()}" in message.text.lower()
 
-    if called_by_tag or called_by_name or called_by_reply:
-        user_input = text.replace(f"@{BOT_USERNAME}", "").strip()
-        if user_input.lower() in ["sus", "sakit ol", "danışma"]:
-            return
+    if not (is_reply or is_tagged):
+        return
 
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "Qısa və doğma danış. Robot kimi yox. 1 cümlə. Zarafat edə bilərsən."},
-                    {"role": "user", "content": user_input}
-                ],
-                max_tokens=50,
-                temperature=0.9
-            )
-            reply = response['choices'][0]['message']['content'].strip()
-            await message.reply_text(reply)
-        except Exception:
-            await message.reply_text("Xəta baş verdi.")
-            traceback.print_exc()
+    user_input = message.text.replace(f"@{BOT_USERNAME}", "").strip()
 
-# Botu işə sal
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Sənin ana dilin Azərbaycan dilidir və sən çox ağıllı, real, səmimi və doğma danışırsan. "
+                        "Cavabların qısa olsun (maksimum 1 cümlə), amma məntiqli və düşündürücü. "
+                        "Hər yazılanı düzgün anla və cavab ver. Robot kimi danışma, elə yaz ki, istifadəçi səni real biri zənn etsin. "
+                        "Səmimi ol, zarafat edə bilərsən, amma həmişə dürüst və yerində danış."
+                    )
+                },
+                {"role": "user", "content": user_input}
+            ],
+            max_tokens=40,
+            temperature=0.9
+        )
+        reply = response.choices[0].message.content.strip()
+        await message.reply_text(reply)
+    except Exception as e:
+        await message.reply_text("Söz tapmadım, sən yenə bir yaz.")
+        traceback.print_exc()
+
+# Botu başlat
 app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("sohbet", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-print("Bot işə düşdü...")
+print("Bot hazır: yalnız tag və reply cavab verir — Azərbaycan dilində, qısa, ağıllı və real.")
 app.run_polling()
