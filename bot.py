@@ -4,7 +4,7 @@ import openai
 import traceback
 
 # Ayarlar
-BOT_TOKEN = "7589791481:AAGyGE8ZISl9x-IdRnloGgClUWTl6uyzBmM"
+BOT_TOKEN = "7589791481:AAH2eUoPFx9_GEpnjf8pXXUA9WR8SEJbO3I"
 BOT_USERNAME = "hamster_sohbet_bot"
 BOT_NAME_KEYWORDS = ["hamster", "Hamster", "Hamster bot", "hamster bot"]
 OPENAI_API_KEY = "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"
