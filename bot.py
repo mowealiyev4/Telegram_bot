@@ -13,7 +13,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # /sohbet komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, qısa və ağıllı danışım — əsl dost kimi.")
+    await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, ağıllı, qısa danışım — əsl dost kimi.")
 
 # Cavab funksiyası
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -32,7 +32,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_input = message.text.replace(f"@{BOT_USERNAME}", "").strip()
-    print("Gelen mesaj:", user_input)
 
     try:
         response = client.chat.completions.create(
@@ -41,28 +40,27 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {
                     "role": "system",
                     "content": (
-                        "Sənin ana dilin Azərbaycan dilidir və sən çox ağıllı, real, səmimi və doğma danışırsan. "
-                        "Cavabların qısa olsun (maksimum 1 cümlə), amma məntiqli və düşündürücü. "
-                        "Hər yazılanı düzgün anla və cavab ver. Robot kimi danışma, elə yaz ki, istifadəçi səni real biri zənn etsin. "
-                        "Səmimi ol, zarafat edə bilərsən, amma həmişə dürüst və yerində danış."
+                        "Sən çox ağıllı, səmimi, zarafatcıl, dürüst və doğma danışan bir bot dostsan. "
+                        "Ana dilin Azərbaycan dilidir. Hər cavabın maksimum 1 cümlə olmalıdır, çox uzun yazma. "
+                        "Cümlələrin real, maraqlı, düşündürücü və bir az da yumor dolu olsun, amma heç vaxt tərbiyəsizlik olmasın. "
+                        "İnsan kimi cavab ver, robot tonunda olmasın. Hər sualı düzgün başa düş və dost kimi cavabla."
                     )
                 },
                 {"role": "user", "content": user_input}
             ],
-            max_tokens=40,
-            temperature=0.9
+            max_tokens=50,
+            temperature=0.95
         )
         reply = response.choices[0].message.content.strip()
         await message.reply_text(reply)
     except Exception as e:
-        print("Xəta baş verdi:", str(e))
-        traceback.print_exc()
         await message.reply_text("Söz tapmadım, sən yenə bir yaz.")
+        traceback.print_exc()
 
 # Başlat
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("sohbet", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-print("Bot işə düşdü.")
+print("Hamster Söhbət Botu işə düşdü — ağıllı, qısa və doğma danışır.")
 app.run_polling()
