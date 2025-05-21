@@ -4,7 +4,7 @@ from openai import OpenAI
 import traceback
 
 # Ayarlar
-BOT_TOKEN = "7589791481:AAETJbD0kxP48tPDg18-bDZ6c4ARNT7mJZg"
+BOT_TOKEN = "7589791481:AAHA7ceWMS4KcV0iQA6mKqqolOy8AdPNRWc"
 BOT_USERNAME = "hamster_sohbet_bot"
 OPENAI_API_KEY = "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"
 
