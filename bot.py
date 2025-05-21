@@ -1,20 +1,21 @@
+import os
+import traceback
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 from openai import OpenAI
-import traceback
 
 # Ayarlar
-BOT_TOKEN = "7589791481:AAHA7ceWMS4KcV0iQA6mKqqolOy8AdPNRWc"
-BOT_USERNAME = "hamster_sohbet_bot"
-OPENAI_API_KEY = "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"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_USERNAME = os.getenv("BOT_USERNAME")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# /start komandası
+# /sohbet komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, qısa və ağıllı danışım — əsl dost kimi.")
 
-# Cavablandırma funksiyası
+# Cavab funksiyası
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     if not message or not message.text:
@@ -31,6 +32,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_input = message.text.replace(f"@{BOT_USERNAME}", "").strip()
+    print("Gelen mesaj:", user_input)
 
     try:
         response = client.chat.completions.create(
@@ -53,13 +55,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = response.choices[0].message.content.strip()
         await message.reply_text(reply)
     except Exception as e:
-        await message.reply_text("Söz tapmadım, sən yenə bir yaz.")
+        print("Xəta baş verdi:", str(e))
         traceback.print_exc()
+        await message.reply_text("Söz tapmadım, sən yenə bir yaz.")
 
-# Botu başlat
+# Başlat
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("sohbet", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-print("Bot hazır: yalnız tag və reply cavab verir — Azərbaycan dilində, qısa, ağıllı və real.")
+print("Bot işə düşdü.")
 app.run_polling()
