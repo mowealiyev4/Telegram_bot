@@ -16,21 +16,22 @@ telegram_app = ApplicationBuilder().token(BOT_TOKEN).build()
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də sənə dost kimi cavab verim.")
 
-# TEST FUNKSİYASI
+# Sadə test cavabı
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     if message:
         print("TEST LOG: mesaj gəldi -", message.text)
-        await message.reply_text("Məni eşidirsənsə, deməli bot işləyir!")
+        await message.reply_text("Məni eşidirsənsə, deməli işləyirəm!")
 
 # Handlerlər
 telegram_app.add_handler(CommandHandler("sohbet", start))
 telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# Telegram-dan gələn mesajları qəbul edən route
+# Webhook (DÜZGÜN async + await ilə)
 @app.route('/webhook', methods=['POST'])
-def webhook():
-    telegram_app.update_queue.put(Update.de_json(request.get_json(force=True), telegram_app.bot))
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
+    await telegram_app.update_queue.put(update)
     return "OK"
 
 # Webhook qurulması
