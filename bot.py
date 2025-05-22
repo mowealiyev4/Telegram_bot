@@ -1,5 +1,6 @@
 import os
 import traceback
+import asyncio
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from openai import OpenAI
@@ -63,19 +64,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 telegram_app.add_handler(CommandHandler("sohbet", start))
 telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# Telegram-dan webhook qəbul edən endpoint
+# Telegram-dan gələn mesajları qəbul edən route
 @app.route('/webhook', methods=['POST'])
 def webhook():
     telegram_app.update_queue.put(Update.de_json(request.get_json(force=True), telegram_app.bot))
     return "OK"
 
-# Webhooku qurmaq üçün giriş nöqtəsi
+# Webhook-u bir dəfəlik qurmaq üçün route
 @app.route('/')
 def index():
     bot = Bot(token=BOT_TOKEN)
-    bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+    asyncio.run(bot.set_webhook(url=f"{WEBHOOK_URL}/webhook"))
     return "Webhook quruldu!"
 
-# Flask serverini işə sal
+# Flask serveri işə sal
 if __name__ == "__main__":
     app.run(port=8080)
