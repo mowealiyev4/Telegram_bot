@@ -1,6 +1,6 @@
 import os
 import traceback
-from telegram import Update
+from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 from openai import OpenAI
 from flask import Flask, request
@@ -9,19 +9,18 @@ from flask import Flask, request
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_USERNAME = os.getenv("BOT_USERNAME")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Məs: https://sənin-adın.onrender.com/webhook
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = Flask(__name__)
-
 telegram_app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 # /sohbet komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, ağıllı, qısa danışım — əsl dost kimi.")
 
-# Mesaj cavabı
+# Cavab funksiyası
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     if not message or not message.text:
@@ -64,18 +63,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 telegram_app.add_handler(CommandHandler("sohbet", start))
 telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# Flask route
+# Telegram-dan webhook qəbul edən endpoint
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    return telegram_app.update_queue.put(Update.de_json(request.get_json(force=True), telegram_app.bot)), 200
+    telegram_app.update_queue.put(Update.de_json(request.get_json(force=True), telegram_app.bot))
+    return "OK"
 
-# Webhook təyin et (1 dəfəlik)
-@app.before_first_request
-def set_webhook():
-    from telegram import Bot
+# Webhooku qurmaq üçün giriş nöqtəsi
+@app.route('/')
+def index():
     bot = Bot(token=BOT_TOKEN)
     bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+    return "Webhook quruldu!"
 
-# Flask serveri işə sal
+# Flask serverini işə sal
 if __name__ == "__main__":
     app.run(port=8080)
