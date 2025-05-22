@@ -77,6 +77,6 @@ def index():
     asyncio.run(bot.set_webhook(url=f"{WEBHOOK_URL}/webhook"))
     return "Webhook quruldu!"
 
-# Flask serveri işə sal
+# Flask serveri işə sal – Render üçün düzgün bind!
 if __name__ == "__main__":
-    app.run(port=8080)
+    app.run(host="0.0.0.0", port=8080)
