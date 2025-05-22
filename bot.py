@@ -1,46 +1,71 @@
 import os
-import asyncio
-from telegram import Update, Bot
+import traceback
+from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-from flask import Flask, request
+from openai import OpenAI
 
 # Ayarlar
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_USERNAME = os.getenv("BOT_USERNAME")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-app = Flask(__name__)
-telegram_app = ApplicationBuilder().token(BOT_TOKEN).build()
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Webhook-u tamamilə sil (bir dəfəlik)
+bot = Bot(token=BOT_TOKEN)
+try:
+    bot.delete_webhook(drop_pending_updates=True)
+    print("Webhook silindi.")
+except Exception as e:
+    print("Webhook silinərkən xəta baş verdi:", e)
 
 # /sohbet komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də sənə dost kimi cavab verim.")
+    await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, ağıllı, qısa danışım — əsl dost kimi.")
 
-# Sadə test cavabı
+# Cavab funksiyası
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    if message:
-        print("TEST LOG: mesaj gəldi -", message.text)
-        await message.reply_text("Məni eşidirsənsə, deməli işləyirəm!")
+    if not message or not message.text:
+        return
 
-# Handlerlər
-telegram_app.add_handler(CommandHandler("sohbet", start))
-telegram_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    is_reply = (
+        message.reply_to_message and
+        message.reply_to_message.from_user and
+        message.reply_to_message.from_user.id == context.bot.id
+    )
+    is_tagged = f"@{BOT_USERNAME.lower()}" in message.text.lower()
 
-# Webhook (DÜZGÜN async + await ilə)
-@app.route('/webhook', methods=['POST'])
-async def webhook():
-    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
-    await telegram_app.update_queue.put(update)
-    return "OK"
+    if not (is_reply or is_tagged):
+        return
 
-# Webhook qurulması
-@app.route('/')
-def index():
-    bot = Bot(token=BOT_TOKEN)
-    asyncio.run(bot.set_webhook(url=f"{WEBHOOK_URL}/webhook"))
-    return "Webhook quruldu!"
+    user_input = message.text.replace(f"@{BOT_USERNAME}", "").strip()
 
-# Serveri işə sal
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": (
+                    "Sən çox ağıllı, səmimi, zarafatcıl, dürüst və doğma danışan bir bot dostsan. "
+                    "Ana dilin Azərbaycan dilidir. Hər cavabın maksimum 1 cümlə olmalıdır, çox uzun yazma. "
+                    "Cümlələrin real, maraqlı, düşündürücü və bir az da yumor dolu olsun, amma heç vaxt tərbiyəsizlik olmasın. "
+                    "İnsan kimi cavab ver, robot tonunda olmasın. Hər sualı düzgün başa düş və dost kimi cavabla."
+                )},
+                {"role": "user", "content": user_input}
+            ],
+            max_tokens=50,
+            temperature=0.95
+        )
+        reply = response.choices[0].message.content.strip()
+        await message.reply_text(reply)
+    except Exception:
+        await message.reply_text("Söz tapmadım, sən yenə bir yaz.")
+        traceback.print_exc()
+
+# Botu işə sal
+app = ApplicationBuilder().token(BOT_TOKEN).build()
+app.add_handler(CommandHandler("sohbet", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+print("Bot polling ilə başladı...")
+app.run_polling()
