@@ -21,7 +21,7 @@ except Exception as e:
 
 # /sohbet komandası
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Məni ya tag elə, ya da cavab yaz. Mən də səninlə doğma, ağıllı, qısa danışım — əsl dost kimi.")
+    await update.message.reply_text("Salam bunnan sonra sənin dostun olacam, məni tağ et, vəya repley at mesajıma.")
 
 # Cavab funksiyası
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -50,6 +50,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "Ana dilin Azərbaycan dilidir. Hər cavabın maksimum 1 cümlə olmalıdır, çox uzun yazma. "
                     "Cümlələrin real, maraqlı, düşündürücü və bir az da yumor dolu olsun, amma heç vaxt tərbiyəsizlik olmasın. "
                     "İnsan kimi cavab ver, robot tonunda olmasın. Hər sualı düzgün başa düş və dost kimi cavabla."
+                    "İnsanlarla dost kimi danış və bot kimi danışma daha səmimi ol ki insanlar sıxılıb bezməsin sənnən."
                 )},
                 {"role": "user", "content": user_input}
             ],
@@ -59,7 +60,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply = response.choices[0].message.content.strip()
         await message.reply_text(reply)
     except Exception:
-        await message.reply_text("Söz tapmadım, sən yenə bir yaz.")
+        await message.reply_text("Bot Kecici Olarağ İşləmir, Səbriniz Üçün Təşəkkürlər).")
         traceback.print_exc()
 
 # Botu işə sal
